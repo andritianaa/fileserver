@@ -1,8 +1,6 @@
 const { Router } = require("express");
-const { Request, Response } = require("express");
 const multer = require("multer");
 const sharp = require("sharp");
-const { ErrorHandler } = require("../utils/error");
 
 const FileRouter = Router();
 
@@ -32,7 +30,7 @@ const fileUpload = multer({
 
 FileRouter.post("/", fileUpload.array("images", 30), async function (req, res) {
   try {
-    if (!req.files || req.files.length === 0) throw new ErrorHandler("Vous n'avez pas envoyé d'image", 400, new Error('No image to upload'));
+    if (!req.files || req.files.length === 0) throw new Error("Vous n'avez pas envoyé d'image");
     const uploadedFiles = [];
     for (const file of req.files) {
       const { path } = file;
@@ -43,8 +41,7 @@ FileRouter.post("/", fileUpload.array("images", 30), async function (req, res) {
     }
     res.send(uploadedFiles);
   } catch (err) {
-    if (err instanceof ErrorHandler) throw err;
-    else throw new ErrorHandler("Impossible de télécharger vos images, nous y travaillons", 500, err);
+    new Error("Impossible de télécharger vos images, nous y travaillons");
   }
 });
 
