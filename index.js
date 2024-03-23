@@ -2,7 +2,7 @@ const express = require("express");
 const { FileRouter } = require("./routes/file.routes");
 
 const app = express();
-const port = 3000;
+const port = 9901;
 
 // Middleware pour gérer les fichiers
 app.use(express.static('public'));
