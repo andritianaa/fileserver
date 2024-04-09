@@ -1,12 +1,15 @@
 const express = require("express");
 const { FileRouter } = require("./routes/file.routes");
 const path = require("path");
+const cors = require("cors");
 const app = express();
 const port = 9901;
 
 // Middleware pour gérer les fichiers
 app.use(express.static('public'));
 app.use(express.json());
+app.use(cors({ origin: "*" }));
+
 
 // Utilisation du routeur de fichiers
 app.use("/", FileRouter);

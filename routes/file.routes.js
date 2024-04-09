@@ -30,14 +30,15 @@ const fileUpload = multer({
 
 FileRouter.post("/", fileUpload.array("images", 30), async function (req, res) {
   try {
+    console.log("here");
     if (!req.files || req.files.length === 0) throw new Error("Vous n'avez pas envoyé d'image");
     const uploadedFiles = [];
     for (const file of req.files) {
       const { path } = file;
       await sharp(path)
         .resize({ width: 600 })
-        .toFile(`public/trtn${file.filename}`);
-      uploadedFiles.push(`trtn${file.filename}`);
+        .toFile(`public/trtn${file.filename}.png`);
+      uploadedFiles.push(`trtn${file.filename}.png`);
     }
     res.send(uploadedFiles);
   } catch (err) {
