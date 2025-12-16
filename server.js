@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs').promises;
 const cors = require('cors');
 const crypto = require('crypto');
-dotenv.config();
+require('dotenv').config()
 const app = express();
 const PORT = process.env.PORT || 3001;
 const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
