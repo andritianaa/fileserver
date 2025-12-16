@@ -3,3 +3,6 @@ yarn.lock
 package-lock.json
 public
 !public/blank
+files/*
+!files/test.html
+.env

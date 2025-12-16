@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Upload - Bun File Server</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .upload-area {
+            border: 3px dashed #ddd;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+        
+        .upload-area:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+        
+        .upload-area.dragover {
+            border-color: #667eea;
+            background: #f0f2ff;
+            transform: scale(1.02);
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s;
+            width: 100%;
+            margin-top: 10px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #eee;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .progress-bar.active {
+            display: block;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+            width: 0%;
+        }
+        
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            display: none;
+        }
+        
+        .result.active {
+            display: block;
+        }
+        
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .result.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .result h3 {
+            margin-bottom: 10px;
+        }
+        
+        .image-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .image-preview img {
+            width: 100%;
+            height: 150px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+        }
+        
+        .file-info {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        
+        .file-info strong {
+            color: #667eea;
+        }
+        
+        code {
+            background: #2d3748;
+            color: #68d391;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📁 Test Upload</h1>
+        <p class="subtitle">Testez l'upload de fichiers vers le serveur Bun</p>
+        
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📤</div>
+            <p><strong>Cliquez pour sélectionner</strong> ou glissez-déposez un fichier</p>
+            <p style="color: #999; font-size: 14px; margin-top: 10px;">
+                Images, vidéos, documents (max 50MB)
+            </p>
+        </div>
+        
+        <input type="file" id="fileInput" accept="image/*,video/*,.pdf,.doc,.docx,.xls,.xlsx,.txt">
+        
+        <button id="uploadBtn" disabled>
+            📤 Upload le fichier
+        </button>
+        
+        <div class="progress-bar" id="progressBar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const uploadBtn = document.getElementById('uploadBtn');
+        const progressBar = document.getElementById('progressBar');
+        const progressFill = document.getElementById('progressFill');
+        const result = document.getElementById('result');
+        
+        let selectedFile = null;
+
+        // Click to upload
+        uploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Drag and drop
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            if (e.dataTransfer.files.length > 0) {
+                selectedFile = e.dataTransfer.files[0];
+                updateUI();
+            }
+        });
+
+        // File selection
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                selectedFile = e.target.files[0];
+                updateUI();
+            }
+        });
+
+        function updateUI() {
+            if (selectedFile) {
+                uploadArea.innerHTML = `
+                    <div class="upload-icon">✅</div>
+                    <p><strong>${selectedFile.name}</strong></p>
+                    <p style="color: #999; font-size: 14px;">
+                        ${(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                `;
+                uploadBtn.disabled = false;
+            }
+        }
+
+        // Upload
+        uploadBtn.addEventListener('click', async () => {
+            if (!selectedFile) return;
+
+            uploadBtn.disabled = true;
+            progressBar.classList.add('active');
+            result.classList.remove('active');
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            try {
+                const xhr = new XMLHttpRequest();
+
+                xhr.upload.addEventListener('progress', (e) => {
+                    if (e.lengthComputable) {
+                        const percentComplete = (e.loaded / e.total) * 100;
+                        progressFill.style.width = percentComplete + '%';
+                    }
+                });
+
+                xhr.addEventListener('load', () => {
+                    if (xhr.status >= 200 && xhr.status < 300) {
+                        const data = JSON.parse(xhr.responseText);
+                        showSuccess(data);
+                    } else {
+                        showError('Erreur lors de l\'upload: ' + xhr.statusText);
+                    }
+                    uploadBtn.disabled = false;
+                    progressBar.classList.remove('active');
+                });
+
+                xhr.addEventListener('error', () => {
+                    showError('Erreur réseau');
+                    uploadBtn.disabled = false;
+                    progressBar.classList.remove('active');
+                });
+
+                xhr.open('POST', 'http://localhost:3001/upload');
+                xhr.send(formData);
+
+            } catch (error) {
+                showError(error.message);
+                uploadBtn.disabled = false;
+                progressBar.classList.remove('active');
+            }
+        });
+
+        function showSuccess(data) {
+            const isImage = data.mimetype.startsWith('image/');
+            
+            result.className = 'result active success';
+            result.innerHTML = `
+                <h3>✅ Fichier uploadé avec succès !</h3>
+                <div class="file-info">
+                    <p><strong>URL:</strong> <code>${data.url}</code></p>
+                    <p><strong>Nom:</strong> ${data.filename}</p>
+                    <p><strong>Taille:</strong> ${(data.size / 1024).toFixed(2)} KB</p>
+                    <p><strong>Type:</strong> ${data.mimetype}</p>
+                </div>
+                ${isImage ? `
+                    <div class="image-preview">
+                        <div>
+                            <img src="${data.url}" alt="Original">
+                            <p style="text-align: center; margin-top: 5px; font-size: 12px;">Original</p>
+                        </div>
+                        <div>
+                            <img src="${data.url}?width=400" alt="400px">
+                            <p style="text-align: center; margin-top: 5px; font-size: 12px;">400px width</p>
+                        </div>
+                        <div>
+                            <img src="${data.url}?width=200" alt="200px">
+                            <p style="text-align: center; margin-top: 5px; font-size: 12px;">200px width</p>
+                        </div>
+                    </div>
+                ` : ''}
+            `;
+        }
+
+        function showError(message) {
+            result.className = 'result active error';
+            result.innerHTML = `
+                <h3>❌ Erreur</h3>
+                <p>${message}</p>
+            `;
+        }
+    </script>
+</body>
+</html>
