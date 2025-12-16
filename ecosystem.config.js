@@ -3,10 +3,8 @@ module.exports = {
         {
             name: "Fileserver",
             script: "./server.js",
-            instances: 'max',
-            exec_mode: 'cluster',
             env: {
-                PORT: 3001,
+                PORT: 5000,
                 NODE_ENV: "production",
                 BASE_URL: "https://fileservertemp.teratany.org",
                 UPLOAD_DIR: "./files",
