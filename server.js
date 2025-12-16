@@ -58,6 +58,7 @@ const corsOptions = {
 // Middleware
 app.use(cors(corsOptions));
 app.use(express.json());
+app.set('trust proxy', 1);
 
 // Configuration de multer pour l'upload
 const storage = multer.diskStorage({
