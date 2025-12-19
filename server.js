@@ -16,43 +16,10 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 // Créer le dossier files s'il n'existe pas
 fs.mkdir(UPLOAD_DIR, { recursive: true }).catch(console.error);
 
-// Configuration CORS avec domaines autorisés
-const allowedDomains = [
-    'hevitro.com',
-    'teratany.org'
-];
-
+// Configuration CORS - autoriser tous les domaines
 const corsOptions = {
-    origin: function (origin, callback) {
-        // En mode développement, autoriser tous les domaines
-        if (NODE_ENV === 'development') {
-            return callback(null, true);
-        }
-
-        // Autoriser les requêtes sans origin (comme Postman, curl, etc.)
-        if (!origin) {
-            return callback(null, true);
-        }
-
-        try {
-            const url = new URL(origin);
-            const hostname = url.hostname;
-
-            // Vérifier si le domaine correspond exactement ou est un sous-domaine
-            const isAllowed = allowedDomains.some(domain => {
-                return hostname === domain || hostname.endsWith(`.${domain}`);
-            });
-
-            if (isAllowed) {
-                callback(null, true);
-            } else {
-                callback(new Error('Not allowed by CORS'));
-            }
-        } catch (error) {
-            callback(new Error('Invalid origin'));
-        }
-    },
-    credentials: true
+    origin: '*', // Autoriser toutes les origines
+    credentials: false // Désactiver les credentials car origin est '*'
 };
 
 // Middleware
@@ -114,40 +81,6 @@ function getMimeType(filename) {
     return mimeTypes[ext] || 'application/octet-stream';
 }
 
-// Route d'accueil
-app.get('/', (req, res) => {
-    res.send(`
-    <!DOCTYPE html>
-    <html>
-      <head>
-        <title>File Server</title>
-        <style>
-          body { font-family: system-ui; max-width: 800px; margin: 50px auto; padding: 20px; }
-          .endpoint { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 5px; }
-          code { background: #e0e0e0; padding: 2px 6px; border-radius: 3px; }
-        </style>
-      </head>
-      <body>
-        <h1>📁 File Server</h1>
-        <p>Server running on port ${PORT}</p>
-        
-        <h2>Endpoints:</h2>
-        
-        <div class="endpoint">
-          <h3>POST /upload</h3>
-          <p>Upload un fichier</p>
-          <p><strong>Form data:</strong> <code>file</code></p>
-        </div>
-        
-        <div class="endpoint">
-          <h3>GET /files/:filename</h3>
-          <p>Récupère un fichier</p>
-          <p><strong>Query params (images):</strong> <code>?width=800</code> (redimensionnement automatique)</p>
-        </div>
-      </body>
-    </html>
-  `);
-});
 
 // Route d'upload
 app.post('/upload', upload.single('file'), async (req, res) => {
@@ -285,5 +218,5 @@ app.use((error, req, res, next) => {
 app.listen(PORT, () => {
     console.log(`🚀 File server running on http://localhost:${PORT}`);
     console.log(`📡 Mode: ${NODE_ENV}`);
-    console.log(`🔒 CORS: ${NODE_ENV === 'development' ? 'Allow All (Development)' : 'Restricted (Production)'}`);
+    console.log(`🔒 CORS: Open to all origins`);
 });
