@@ -90,37 +90,37 @@ app.post('/upload', upload.single('file'), async (req, res) => {
         }
 
         const mimetype = req.file.mimetype || getMimeType(req.file.filename);
-        const isImage = mimetype.startsWith('image/') && !mimetype.includes('svg');
+        const isImage = mimetype.startsWith('image/') && !mimetype.includes('svg') && !mimetype.includes('gif');
 
         let finalFilename = req.file.filename;
         let finalMimetype = mimetype;
         let finalSize = req.file.size;
 
-        // Convertir les images en WebP (sauf SVG)
-        if (isImage) {
+        // Convertir les images en JPG (sauf SVG, GIF et JPG)
+        if (isImage && !mimetype.includes('jpeg')) {
             try {
                 const originalPath = path.join(UPLOAD_DIR, req.file.filename);
-                const webpFilename = req.file.filename.replace(/\.(jpg|jpeg|png|gif|webp)$/i, '.webp');
-                const webpPath = path.join(UPLOAD_DIR, webpFilename);
+                const jpgFilename = req.file.filename.replace(/\.(png|webp)$/i, '.jpg');
+                const jpgPath = path.join(UPLOAD_DIR, jpgFilename);
 
-                // Convertir en WebP avec une bonne qualité
+                // Convertir en JPG avec une bonne qualité
                 await sharp(originalPath)
-                    .webp({ quality: 85 })
-                    .toFile(webpPath);
+                    .jpeg({ quality: 85 })
+                    .toFile(jpgPath);
 
                 // Supprimer le fichier original
                 await fs.unlink(originalPath);
 
-                // Obtenir la taille du fichier WebP
-                const stats = await fs.stat(webpPath);
+                // Obtenir la taille du fichier JPG
+                const stats = await fs.stat(jpgPath);
 
-                finalFilename = webpFilename;
-                finalMimetype = 'image/webp';
+                finalFilename = jpgFilename;
+                finalMimetype = 'image/jpeg';
                 finalSize = stats.size;
 
-                console.log(`✅ Image converted to WebP: ${req.file.filename} → ${webpFilename} (${req.file.size} → ${stats.size} bytes)`);
+                console.log(`✅ Image converted to JPG: ${req.file.filename} → ${jpgFilename} (${req.file.size} → ${stats.size} bytes)`);
             } catch (error) {
-                console.error('WebP conversion error:', error);
+                console.error('JPG conversion error:', error);
                 // En cas d'erreur, garder le fichier original
                 console.log('⚠️ Keeping original file due to conversion error');
             }
